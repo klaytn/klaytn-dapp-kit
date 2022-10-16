@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import Web3 from 'web3';
-import { useState, useEffect, useContext } from 'react' 
+import React, { useState, useEffect, useContext } from 'react' 
 import { useToast } from '@chakra-ui/react'
 import Web3Modal from "web3modal";
 
@@ -16,8 +16,18 @@ export default function Home() {
   const [signedMessage, setSignedMessage] = useState("");
   const [verifiedUi, setVerifiedUi] = useState();
   const [verifiedBackend, setVerifiedBackend] = useState();
+  const [web3Modal, setWeb3Modal] = useState();
   const toast = useToast()
   const targetNetworkId = '0x3e9';
+
+  React.useEffect(() => {
+    const providerOptions = {};
+    const _web3Modal = new Web3Modal({
+      cacheProvider: true,
+      providerOptions
+    });
+    setWeb3Modal(_web3Modal);
+  }, [])
 
   const checkNetwork = async () => {
     if(window.ethereum) {
@@ -39,11 +49,6 @@ export default function Home() {
   }
 
   const reload = async () => {
-    const providerOptions = {};
-    const web3Modal = new Web3Modal({
-      cacheProvider: true,
-      providerOptions
-    });
     const provider = await web3Modal.connect();
 
     let web3 = new Web3(provider);

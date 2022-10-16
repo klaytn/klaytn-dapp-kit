@@ -16,3 +16,6 @@ Steps to run the application
 4. Verify the message
 	a) Verify Message from UI
 	b) Verify Message from Backend
+
+
+![Authentication Flow](https://github.com/klaytn/klaytn-dapp-kit/blob/main/docs/authentication_flow.png?raw=true)
