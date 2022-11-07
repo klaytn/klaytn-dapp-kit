@@ -36,7 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 
-sign/signature-fe/.next/
+.next/
 node_modules/
 bin/
 authenticate/authentication-be/bin/www

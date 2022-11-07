@@ -2,6 +2,8 @@
 
 Steps to run the application
 
+`cd authenticate`
+
 1. **Setup backend**
     - `cd authentication-be`
     - `npm install`
