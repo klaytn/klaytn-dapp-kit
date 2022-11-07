@@ -155,7 +155,7 @@ export default function Home() {
   const verifyMessageFromUi = () => {
     let _address = web3Instance.eth.accounts.recover(message, signedMessage)
     if(_address == address) {
-      setVerifiedUi("Verified from UI & Signed by "+_address);
+      setVerifiedUi("Verification Success and Signed by "+_address);
       toast({
         title: 'Status',
         description: "Verified message",
@@ -222,7 +222,7 @@ export default function Home() {
               <div className="Nav__inner">
                 <h1 className="Nav__logo">
                   <a href="/">
-                    <img src="logo.png" alt="Klaytn Snap Tutorial"/>
+                    <img src="logo.png" alt="Dapp Kit"/>
                   </a>
                 </h1>
                 <div className="Nav__network" id="connectButton" onClick={connect} style={{ cursor: 'pointer' }}>
@@ -243,7 +243,7 @@ export default function Home() {
                     <span className="WalletInfo__unit">KLAY</span>
                   </div>
                 </div>
-                <p className="WalletInfo__faucet">If you need small amount of Klay for testing. <a className="WalletInfo__link" href="https://baobab.wallet.klaytn.foundation/faucet" target="_blank" rel="noreferrer noopener">Run Klay Faucet</a>
+                <p className="WalletInfo__faucet">If you need small amount of Klay for testing<a className="WalletInfo__link" href="https://baobab.wallet.klaytn.foundation/faucet" target="_blank" rel="noreferrer noopener">Klay Faucet</a>
                 </p>
               </div>
               { isFeatureActive == true && <div className="KlaytnPage__content" id="feature">
@@ -270,12 +270,12 @@ export default function Home() {
                       </div>
                     }
                     <div className="FeeDelegation">
-                      <h3>Verify Message from UI</h3>
+                      <h3>Verify Message from Frontend</h3>
                       <button className="Button" onClick={verifyMessageFromUi}>
-                        <span>Verify from UI</span>
+                        <span>Verify from Frontend</span>
                       </button>
                       { verifiedUi && <div className="TxResult">
-                        <h3>Verification Status</h3>
+                        <h3>Verified Status</h3>
                         <div className="Input">
                           <input id="deployedContract" disabled type="text" placeholder="" className="Input__input" autoComplete="off" value={verifiedUi}/>
                         </div>

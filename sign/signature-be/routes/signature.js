@@ -8,7 +8,7 @@ router.post('/verify', function(req, res) {
     const { address, message, signedMessage } = req.body;
     let signedAddress = web3.eth.accounts.recover(message, signedMessage);
     if(signedAddress === address) {
-      res.status(200).json({success: true, message: 'Verified from Backend & Signed by '+signedAddress});
+      res.status(200).json({success: true, message: 'Verification success & Signed by '+signedAddress});
     } else {
       res.status(400).json({success: false, message: 'Not verified'});
     }
