@@ -1,6 +1,6 @@
 # klaytn-dapp-kit
 
-Boiler plate code for signing and authentication. The repository has the structure and template to connect to multiple wallets using [web3modal](https://github.com/Yeonju-Kim/web3modal). 
+Boiler plate code for signing and authentication. The repository has the structure and template to connect to multiple wallets using [web3modal](https://github.com/klaytn/klaytn-web3modal). 
   
 1. **sign** 
 
