@@ -1,7 +1,8 @@
 ## Getting Started
 
-1. `yarn install`
-2. First, run the development server:
+1. Rename .env.example to .env
+2. `yarn install`
+3. First, run the development server:
 
 ```bash
 npm run dev

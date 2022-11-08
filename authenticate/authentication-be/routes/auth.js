@@ -2,10 +2,11 @@ var express = require('express');
 var router = express.Router();
 var Web3 = require('web3');
 var web3 = new Web3(process.env.RPC_URL);
+const Caver = require('caver-js')
+const caver = new Caver(process.env.RPC_URL);
 let path = require('path');
 const Low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync');
-const { sign } = require('crypto');
 
 // Use JSON file for storage
 const file = path.join(process.cwd(), 'db.json')
@@ -61,6 +62,7 @@ router.post('/nonce', (req, res) => {
 router.post('/login', (req, res) => {
   let _address = req.body.address;
   let _signature = req.body.signature || '';
+  let _provider = req.body.provider;
 
   let users = db.get('users');
   let userData = users.filter(
@@ -72,7 +74,13 @@ router.post('/login', (req, res) => {
 
   let _nonce = userData[0].nonce;
   let message = `Nonce : ${_nonce}`;
-  let signedAddress = web3.eth.accounts.recover(message, _signature);
+  let signedAddress;
+  if(_provider == "metamask") {
+    signedAddress = web3.eth.accounts.recover(message, _signature);
+  } else if(_provider == "kaikas") {
+    signedAddress = caver.klay.accounts.recover(message, _signature);
+  }
+  
   if(_address.toLowerCase() == signedAddress.toLowerCase()) {
     const token = jwt.sign({
         address: signedAddress

@@ -1,186 +1,212 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
 import Web3 from 'web3';
-import { useState, useEffect, useContext } from 'react' 
+import React, { useState } from 'react' 
 import { useToast } from '@chakra-ui/react'
-import Web3Modal from "web3modal";
+
+import Web3Modal from '@klaytn/web3modal'
+import { KaikasWeb3Provider } from '@klaytn/kaikas-web3-provider'
 
 export default function Home() {
-  const [address, setAddress] = useState("Login with Metamask Wallet :)");
+  const DEFAULT_ADDRESS_MESSAGE = "Connect with Wallet :)";
+  const [address, setAddress] = useState(DEFAULT_ADDRESS_MESSAGE);
   const [balance, setBalance] = useState(0);
   const [connectButtonLabel, setConnectButtonLabel] = useState("Connect");
   const [web3Instance, setWeb3Instance] = useState();
-  const [showLogin, setShowLogin] = useState(true);
+  const [web3Modal, setWeb3Modal] = useState();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [jwtToken, setJwtToken] = useState('');
   const toast = useToast()
-  const targetNetworkId = '0x3e9';
 
-  const checkNetwork = async () => {
-    if(window.ethereum) {
-      const currentChainId = await window.ethereum.request({
-        method: 'eth_chainId',
-      });
+  const targetNetworkId = process.env.CHAINID || 1001;
+  const API_BASEURL = process.env.API_BASEURL;
 
-      if(currentChainId == targetNetworkId) return true;
-      return false;
+  const providerOptions = {
+    kaikas: {
+      package: KaikasWeb3Provider
     }
+  };
+
+  React.useEffect(() => {
+    const _web3Modal = new Web3Modal({
+      cacheProvider: false,
+      disableInjectedProvider: false,
+      providerOptions
+    });
+    
+    setWeb3Modal(_web3Modal);
+  }, [])
+
+  const checkNetwork = (_currentChainId) => {
+    return _currentChainId == targetNetworkId;
   }
 
   const reset = async () => {
-    setAddress('');
+    if (web3Instance && web3Instance.currentProvider && web3Instance.currentProvider.close) {
+      await web3Instance.currentProvider.close()
+    }
+    setAddress(DEFAULT_ADDRESS_MESSAGE);
     setBalance('0');
     setConnectButtonLabel("Connect");
     setWeb3Instance(null);
+    await web3Modal.clearCachedProvider();
+    localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
     setIsLoggedIn(false);
+    setJwtToken('');
   }
 
   const reload = async () => {
-    const providerOptions = {};
-    const web3Modal = new Web3Modal({
-      cacheProvider: true,
-      providerOptions
-    });
     const provider = await web3Modal.connect();
+    if(! checkNetwork(provider.networkVersion || provider.chainId)) {
+      throw new Error("Please select Baobab network");
+    }
 
-    let web3 = new Web3(provider);
-    let accounts = await web3.eth.getAccounts();
-    let _address = accounts[0];
-    let _balance = await web3.eth.getBalance(_address);
-    _balance = web3.utils.fromWei(_balance, "ether");
+    let web3, _address, _balance = 0, _providerLabel = "";
+    if(!provider.caver) {
+      web3 = new Web3(provider);
+      _address = provider.selectedAddress;
+      _balance = await web3.eth.getBalance(_address);
+      if(_balance) {
+        _balance = web3.utils.fromWei(_balance, "ether");
+      }
+      _providerLabel = "( Metamask )";
+    } else if(provider.caver){
+      web3 = provider.caver;
+      let accounts = provider._addresses;
+      _address = accounts[0];
+      _balance = await web3.klay.getBalance(_address);
+      if(_balance) {
+        _balance = web3.utils.convertFromPeb(_balance, 'KLAY');
+      }
+      _providerLabel = "( Kaikas )";
+    }
+    
+    toast({
+      title: 'Connected',
+      description: "Connected to Baobab network",
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
 
-    setAddress(_address);
+    setAddress(_address.toLowerCase());
     setBalance(_balance.toString());
-    setConnectButtonLabel("Baobab Network");
+    setConnectButtonLabel("Baobab Network "+_providerLabel);
     setWeb3Instance(web3);
+    return { provider, web3, _address: _address.toLowerCase() };
+  }
+
+  const disconnect = async () => {
+    reset();
+    toast({
+      title: 'Status',
+      description: "Logged Out",
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
   }
 
   const connect = async () => {
     if(!(connectButtonLabel == 'Connect')) {
-      return true;
+      return;
     }
     try {
-      if(window && window.ethereum) {
-        await window.ethereum.enable();
-      } else {
-        toast({
-          title: 'Error',
-          description: "Not able to find Metamask. Please install",
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return false;
-      }
+      let { provider, web3, _address} = await reload();
 
-      if(! (await checkNetwork())) {
-        toast({
-          title: 'Error',
-          description: "Please select Baobab network",
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return false;
-      } else {
-        toast({
-          title: 'Connected',
-          description: "Connected to Baobab network",
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-      }
-
-      await reload();
-
-      window.ethereum.on('accountsChanged', async (_accounts) => {
-        setAddress(_accounts[0]);
-        let _balance = await web3.eth.getBalance(_accounts[0]);
-        _balance = web3.utils.fromWei(_balance, "ether");
-        setBalance(_balance.toString());
+      provider.on('accountsChanged', async (_accounts) => {
+        setAddress(_accounts[0].toLowerCase());
+        if(web3Instance.eth) {
+          let _balance = await weweb3Instanceb3.eth.getBalance(_accounts[0]);
+          if(_balance) {
+            _balance = web3Instance.utils.fromWei(_balance, "ether");
+            setBalance(_balance.toString());
+          }
+        } else if(web3Instance.klay){
+          let _balance = await web3Instance.klay.getBalance(_accounts[0]);
+          if(_balance) {
+            _balance = web3Instance.utils.convertFromPeb(_balance, 'KLAY');
+            setBalance(_balance.toString());
+          }
+        }
       });
 
-      window.ethereum.on('networkChanged', (networkId) => {
-        if(networkId == targetNetworkId) {
+      provider.on('networkChanged', (_networkId) => {
+        if(_networkId == targetNetworkId) {
           reload();
         } else {
           reset();
         }
-      })
+      });
 
-      return true;
+      return { web3, _address};
       
     } catch(err) {
       console.error("connection error "+ err.message || err);
       toast({
         title: 'Error',
-        description: "connection error "+ err.message,
+        description: err.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
       })
-      return false;
     }
   }
 
-  const register = async () => {
-    let connected = (connectButtonLabel != "Connect")
-    if(connected == true) {
+  const register = async (_address) => {
       const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address })
+        body: JSON.stringify({ address: _address })
       };
-      fetch('http://localhost:3001/auth/register', requestOptions)
-          .then(response => response.json())
-          .then(data => {
-            toast({
-              title: 'Registered',
-              description: "Registered successfully",
-              status: 'success',
-              duration: 3000,
-              isClosable: true,
-            })
-          }).catch(err => {
-            toast({
-              title: 'Error',
-              description: "Problem while registering",
-              status: 'error',
-              duration: 3000,
-              isClosable: true,
-            })
-          });
-    } else {
-      toast({
-        title: 'Error',
-        description: "Please connect and register with metamask",
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
+      try {
+        let response = await fetch(API_BASEURL+'/auth/register', requestOptions);
+        response = await response.json();
+        if(response && response.success) {
+          toast({
+            title: 'Registered',
+            description: "Registered successfully",
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          })
+        } else {
+          throw new Error("Problem while registering");
+        }
+      } catch(err) {
+        throw new Error("Problem while connecting to wallet");
+      }
   }
 
   const login = async () => {
-    let connected = (connectButtonLabel != "Connect")
-    if(connected == true) {
-      let result = await requestNonce();
+    try {
+      debugger;
+      // Connecting to wallet
+      let {web3, _address} = await connect();
+      // Registering the User
+      await register(_address);
+      // Requesting the nonce for user
+      let result = await requestNonce(_address);
       if(result.success == false) {
         throw new Error("Problem while generating nonce");
       }
-      let signature = await signMessage(result.data.nonce);
-      debugger;
+      let signature = await signMessage(result.data.nonce, web3, _address);
+      // User login
+      let _provider;
+      if(web3.eth) {
+        _provider = "metamask";
+      } else if(web3.klay) {
+        _provider = "kaikas";
+      }
       const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: address, signature: signature })
+        body: JSON.stringify({ address: _address, signature: signature, provider: _provider })
       };
-      fetch('http://localhost:3001/auth/login', requestOptions)
+      fetch(API_BASEURL+'/auth/login', requestOptions)
         .then(response => response.json())
         .then(data => {
           debugger;
           if(data.success) {
+            setJwtToken(data.data.token)
             toast({
               title: 'Login Status',
               description: "Logged-in successfully",
@@ -190,6 +216,7 @@ export default function Home() {
             });
             setIsLoggedIn(true);
           } else {
+            reset();
             toast({
               title: 'Login Status',
               description: "Login failure "+data.message,
@@ -198,39 +225,38 @@ export default function Home() {
               isClosable: true,
             })
           }
-          
         }).catch(err => {
+          reset();
           toast({
             title: 'Login Status',
-            description: "Problem while loggin in"+err.message,
+            description: "Problem while logging in"+err.message,
             status: 'error',
             duration: 3000,
             isClosable: true,
           })
-        }); 
-    } else {
+        });
+    } catch(err) {
+      reset();
       toast({
         title: 'Error',
-        description: "Please connect and login with metamask",
+        description: err.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
       })
     }
-    
   }
 
-  const requestNonce = async () => {
+  const requestNonce = async (_address) => {
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: address })
+      body: JSON.stringify({ address: _address })
     };
-    return await fetch('http://localhost:3001/auth/nonce', requestOptions)
-              .then(response => response.json())
+    return await fetch(API_BASEURL+'/auth/nonce', requestOptions).then(response => response.json())
   }
 
-  const signMessage = async (_nonce) => {
+  const signMessage = async (_nonce, web3, _address) => {
     _nonce = `Nonce : ${_nonce}`
     if(!_nonce) return toast({
       title: 'Error',
@@ -239,9 +265,22 @@ export default function Home() {
       duration: 3000,
       isClosable: true,
     })
-    
-    let _signature = await window.ethereum.request({ method: 'personal_sign', 
-      params: [address, _nonce] });
+    let _signature;
+    if(web3.eth) {
+      _signature = await window.ethereum.request({ method: 'personal_sign', params: [_address, _nonce] });
+    } else if(web3.klay) {
+      _signature = await web3.klay.sign(_nonce, _address);
+    } else {
+      toast({
+        title: 'Error',
+        description: "Please check the wallets properly",
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return;
+    }
+
     toast({
       title: 'Status',
       description: "Messsage Signed successfully",
@@ -264,9 +303,11 @@ export default function Home() {
                     <img src="logo.png" alt="Klaytn Snap Tutorial"/>
                   </a>
                 </h1>
-                <div className="Nav__network" style={{cursor: 'pointer'}} id="connectButton" onClick={connect}>
-                  {connectButtonLabel}
-                </div>
+                { connectButtonLabel != 'Connect' ? 
+                  <div className="Nav__network" style={{cursor: 'pointer'}} id="connectButton" onClick={connect}>
+                    {connectButtonLabel}
+                  </div>: <></>
+                }
               </div>
             </header>
             <div className="KlaytnPage__main">
@@ -274,30 +315,13 @@ export default function Home() {
               <div className="WalletInfo">
                 <h2 className="WalletInfo__title">Authentication</h2>
                 <div className="WalletInfo__infoBox">
-                  { showLogin == true ? <>
-                      <div className="WalletInfo__info">
-                        <span className="WalletInfo__label">Login</span>
-                      <button className="Button" onClick={login} style={{cursor: 'pointer'}}>
-                        <img src=""/>
-                        <span>Login With Metamask</span>
-                      </button>
-                    </div>
-                    <span className="WalletInfo__label" onClick={() => setShowLogin(false)} style={{textAlign: 'right', paddingRight: '30px', cursor: 'pointer'}}>
-                      Not Registered ?
-                    </span>
-                  </> :
-                  <>
                     <div className="WalletInfo__info">
-                        <span className="WalletInfo__label">Register</span>
-                      <button className="Button" onClick={register} style={{cursor: 'pointer'}}>
-                        <img src=""/>
-                        <span>Register With Metamask</span>
-                      </button>
-                    </div>
-                    <span className="WalletInfo__label" onClick={() => setShowLogin(true)} style={{textAlign: 'right', paddingRight: '30px', cursor: 'pointer'}}>
-                      Registered Already ?
-                    </span>
-                  </>}
+                      <span className="WalletInfo__label">Login</span>
+                    <button className="Button" onClick={login} style={{cursor: 'pointer'}}>
+                      <img src=""/>
+                      <span>Login With Wallet</span>
+                    </button>
+                  </div>
                 </div>
                 <p className="WalletInfo__faucet">If you need small amount of Klay for testing. <a className="WalletInfo__link" href="https://baobab.wallet.klaytn.foundation/faucet" target="_blank" rel="noreferrer noopener">Run Klay Faucet</a>
                 </p>
@@ -321,9 +345,13 @@ export default function Home() {
                 <div className="Dropdown KlaytnPage__dropdown">
                   <div className="Dropdown__title">Successfully Logged In</div>
                 </div>
+                <div className="CodeBlockExample">
+                        <h3>JWT Token</h3>
+                        <div className="CodeBlockExample__code">{jwtToken}</div>
+                      </div>
                 <div className="KlaytnPage__txExample">
-                  <div className="ValueTransferFD">
-                    <button className="Button" onClick={reset}>
+                  <div>
+                    <button className="Button" onClick={disconnect}>
                       <span>Logout</span>
                     </button>
                   </div>
