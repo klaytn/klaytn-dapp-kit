@@ -20,4 +20,4 @@ Steps to run the application
 3. Connect and Register with metamask connected to Baobab from UI
 4. Login
 
-![Authentication Flow](https://github.com/klaytn/klaytn-dapp-kit/blob/main/docs/authentication_flow.png?raw=true)
+![Authentication Flow](https://github.com/klaytn/klaytn-dapp-kit/blob/dev/authenticate/docs/authentication_flow.png?raw=true)
