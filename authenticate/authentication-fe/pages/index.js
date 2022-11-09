@@ -314,14 +314,10 @@ export default function Home() {
               { isLoggedIn == false ?
               <div className="WalletInfo">
                 <h2 className="WalletInfo__title">Authentication</h2>
-                <div className="WalletInfo__infoBox">
-                    <div className="WalletInfo__info">
-                      <span className="WalletInfo__label">Login</span>
-                    <button className="Button" onClick={login} style={{cursor: 'pointer'}}>
-                      <img src=""/>
-                      <span>Login With Wallet</span>
-                    </button>
-                  </div>
+                <div style={{width: "500px", margin: "20px auto"}}>
+                  <button className="Button" onClick={login} style={{cursor: 'pointer'}}>
+                    <span>Login With Wallet</span>
+                  </button>
                 </div>
                 <p className="WalletInfo__faucet">If you need small amount of Klay for testing. <a className="WalletInfo__link" href="https://baobab.wallet.klaytn.foundation/faucet" target="_blank" rel="noreferrer noopener">Run Klay Faucet</a>
                 </p>
@@ -346,9 +342,10 @@ export default function Home() {
                   <div className="Dropdown__title">Successfully Logged In</div>
                 </div>
                 <div className="CodeBlockExample">
-                        <h3>JWT Token</h3>
-                        <div className="CodeBlockExample__code">{jwtToken}</div>
-                      </div>
+                  <h3>JWT Token</h3>
+                  <div className="CodeBlockExample__code">{jwtToken}</div>
+                  <h3 style={{marginTop: "10px"}}>This JWT Token can be used for authentication of multiple api calls to the Backend</h3>
+                </div>
                 <div className="KlaytnPage__txExample">
                   <div>
                     <button className="Button" onClick={disconnect}>
