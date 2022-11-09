@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var Web3 = require('web3');
-var web3 = new Web3(process.env.RPC_URL);
+var web3 = new Web3();
 const Caver = require('caver-js')
-const caver = new Caver(process.env.RPC_URL);
+const caver = new Caver();
 let path = require('path');
 const Low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync');
