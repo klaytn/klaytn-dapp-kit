@@ -18,8 +18,8 @@ export default function Home() {
   const [verifiedBackend, setVerifiedBackend] = useState("");
   const [web3Modal, setWeb3Modal] = useState();
   const toast = useToast()
-  const targetNetworkId = process.env.CHAINID || 1001;
-  const API_BASEURL = process.env.API_BASEURL;
+  const targetNetworkId = process.env.CHAINID || "1001";
+  const API_BASEURL = process.env.API_BASEURL || "http://localhost:3001";
   const providerOptions = {
     kaikas: {
       package: KaikasWeb3Provider

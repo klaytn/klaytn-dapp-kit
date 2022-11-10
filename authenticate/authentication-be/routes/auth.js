@@ -7,6 +7,7 @@ const caver = new Caver();
 let path = require('path');
 const Low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync');
+const JWT_SECRET = process.env.JWT_SECRET || "ANY_SECRET_CODE_HERE";
 
 // Use JSON file for storage
 const file = path.join(process.cwd(), 'db.json')
@@ -84,7 +85,7 @@ router.post('/login', (req, res) => {
   if(_address.toLowerCase() == signedAddress.toLowerCase()) {
     const token = jwt.sign({
         address: signedAddress
-    }, process.env.JWT_SECRET, {expiresIn: '6h'});
+    }, JWT_SECRET, {expiresIn: '6h'});
 
     res.status(200).json({success: true, data: {token: token}, message: 'Verified'}); 
   } else {
