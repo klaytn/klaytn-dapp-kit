@@ -1,0 +1,6 @@
+sign/node_modules
+sign/signature-fe/.next
+sign/signature-fe/node_modules
+authenticate/node_modules
+authenticate/authentication-fe/.next
+authenticate/authentication-fe/node_modules
