@@ -16,7 +16,7 @@ Authenticate module has a frontend and backend boiler plate code to sign, verify
 
 Refer to [README](authenticate/README.md) section for step by step instructions to sign and authenticate
 
-![Authentication Flow](https://github.com/klaytn/klaytn-dapp-kit/blob/main/authenticate/docs/authentication_flow.png?raw=true)
+![Authentication Flow](authenticate/docs/authentication_flow.png)
 
 
 	
