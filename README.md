@@ -18,5 +18,9 @@ Refer to [README](authenticate/README.md) section for step by step instructions 
 
 ![Authentication Flow](authenticate/docs/authentication_flow.png)
 
+3. **fee delegation**
+Fee Delegation has a frontend and backend boiler plate code to sign with deployer and fee payer. Frontend will sign the transaction with deployer kaikas account .Backend will send the transaction from fee payer for the signed transaction by deployer from frontend. 
+	- sample contract deployment with deployer and fee payer
 
+Refer to [README](feedelegation/README.md) section for step by step instructions to perform transaction with deployer and feedeployer
 	
