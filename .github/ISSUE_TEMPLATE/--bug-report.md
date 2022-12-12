@@ -21,7 +21,7 @@ If applicable, add data, logs or screenshots to help explain your problem.
 
 **Environment (please complete the following information)**
  - Node version that exhibits the issue
- - The version pragma of the smart contract(s) involved
+ - Which module is being used. eg: sign
  - OS and its version [e.g. macOS/10.14]
 
 **Additional context**
