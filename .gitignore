@@ -4,3 +4,7 @@ sign/signature-fe/node_modules
 authenticate/node_modules
 authenticate/authentication-fe/.next
 authenticate/authentication-fe/node_modules
+feedelegation/.env
+feedelegation/node_modules
+feedelegation/feedelegation-fe/.next
+feedelegation/feedelegation-fe/node_modules

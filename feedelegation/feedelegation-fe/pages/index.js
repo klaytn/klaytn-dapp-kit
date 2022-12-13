@@ -4,6 +4,8 @@ import { useToast } from '@chakra-ui/react'
 
 import Web3Modal from '@klaytn/web3modal'
 import { KaikasWeb3Provider } from '@klaytn/kaikas-web3-provider'
+import { byteCode, abi, sampleContract } from './constants';
+import { LinkIcon } from '@chakra-ui/icons';
 
 export default function Home() {
   const DEFAULT_ADDRESS_MESSAGE = "Connect with Wallet :)";
@@ -12,14 +14,14 @@ export default function Home() {
   const [connectButtonLabel, setConnectButtonLabel] = useState("Connect");
   const [isFeatureActive, setIsFeatureActive] = useState(false);
   const [web3Instance, setWeb3Instance] = useState();
-  const [message, setMessage] = useState("");
-  const [signedMessage, setSignedMessage] = useState("");
-  const [verifiedUi, setVerifiedUi] = useState("");
-  const [verifiedBackend, setVerifiedBackend] = useState("");
+  const [deployerOutput, setDeployerOutput] = useState('');
+  const [deployedContract, setDeployedContract] = useState('');
   const [web3Modal, setWeb3Modal] = useState();
   const toast = useToast()
   const targetNetworkId = process.env.CHAINID || "1001";
   const API_BASEURL = process.env.API_BASEURL || "http://localhost:3001";
+  const keyString = 'keyString';
+  const valueString = 'valueString';
   const providerOptions = {
     kaikas: {
       package: KaikasWeb3Provider
@@ -46,19 +48,26 @@ export default function Home() {
     setConnectButtonLabel("Connect");
     setIsFeatureActive(false);
     setWeb3Instance(null);
-    setMessage('');
-    setSignedMessage('');
-    setVerifiedUi('');
-    setVerifiedBackend('');
+    setDeployerOutput('');
+    setDeployedContract('');
     await web3Modal.clearCachedProvider();
     localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
   }
 
   const reload = async () => {
+    let element = document.getElementsByClassName('web3modal-provider-wrapper');
+    if(element.length > 1) {
+      element[0].remove();
+    }
+
     const provider = await web3Modal.connect();
+
     if(! checkNetwork(provider.networkVersion || provider.chainId)) {
+      reset();
       throw new Error("Please select Baobab network");
     }
+
+
 
     let web3, _address, _balance = 0, _providerLabel = "";
     if(!provider.caver) {
@@ -154,79 +163,51 @@ export default function Home() {
     }
   }
 
-  const signMessage = async () => {
-    if(!message) return toast({
+  const signDeployer = async () => {
+    if(!byteCode) return toast({
       title: 'Error',
-      description: "Please provide valid message",
+      description: "Please provide valid byteCode",
       status: 'error',
       duration: 3000,
       isClosable: true,
     })
-    if(web3Instance.eth) {
-      let _signature = await window.ethereum.request({ method: 'personal_sign', params: [address, message] });
-      setSignedMessage(_signature);
-    } else if(web3Instance.klay) {
-      let _signature = await web3Instance.klay.sign(message, address);
-      setSignedMessage(_signature);
+    if(web3Instance.klay) {
+      let data = byteCode + web3Instance.abi.encodeParameters(['string','string'], [keyString, valueString]).replace("0x", "");
+      const txData = {
+        type: 'FEE_DELEGATED_SMART_CONTRACT_DEPLOY',
+        from: address,
+        data,
+        gas: 1000000,
+        value: caver.utils.toPeb("0", 'KLAY')
+      }
+
+      const { rawTransaction } = await web3Instance.klay.signTransaction(txData)
+      setDeployerOutput(rawTransaction);
+      deployerOutput = rawTransaction;
+      
+      toast({
+        title: 'Status',
+        description: "Deployer Signed successfully",
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
     } else {
       toast({
         title: 'Error',
-        description: "Please check the wallets properly",
+        description: "Please connect to valid Wallet",
         status: 'error',
         duration: 3000,
         isClosable: true,
-      })
-      return;
+      });
     }
-    
-    toast({
-      title: 'Status',
-      description: "Messsage Signed successfully",
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    })
   }
 
-  const verifyMessageFromUi = () => {
-    try {
-      let _address;
-      if(web3Instance.eth) {
-        _address = web3Instance.eth.accounts.recover(message, signedMessage)
-      } else if(web3Instance.klay) {
-        _address = web3Instance.klay.accounts.recover(message, signedMessage)
-      } else {
-        throw new Error("Not a valid web3 instance");
-      }
-      if(_address.toLowerCase() == address.toLowerCase()) {
-        setVerifiedUi("Verification Success and Signed by "+_address);
-        toast({
-          title: 'Status',
-          description: "Verified message",
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-      }
-    } catch(err) {
-      console.log(err.message);
-      setVerifiedUi("Not Verified");
-      toast({
-        title: 'Status',
-        description: "Not Verified",
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-    
-  }
-
-  const verifyMessageFromBackend = () => {
-    if(!signedMessage) {
+  const signFeePayer = () => {
+    if(!deployerOutput) {
       toast({
         title: 'Error',
-        description: "Please sign the message and verify",
+        description: "Deployer Signature invalid",
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -234,9 +215,7 @@ export default function Home() {
       return;
     }
     let provider;
-    if(web3Instance.eth) {
-      provider = "metamask";
-    } else if(web3Instance.klay) {
+    if(web3Instance.klay) {
       provider = "kaikas";
     } else {
       toast({
@@ -249,41 +228,51 @@ export default function Home() {
       return;
     }
 
+    toast({
+      title: 'Status',
+      description: "FeeDelegation inititated",
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
+
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, message, signedMessage, provider })
+      body: JSON.stringify({ deployTx: deployerOutput })
     };
     
-    fetch(API_BASEURL+'/signatures/verify', requestOptions)
+    fetch(API_BASEURL+'/feedelegation/', requestOptions)
         .then(response => response.json())
         .then(data => {
           if(data.success) {
             toast({
               title: 'Status',
-              description: "Verified message",
+              description: "FeeDelegation successful",
               status: 'success',
               duration: 3000,
               isClosable: true,
             })
+            setDeployedContract(data.contractAddress);
           } else {
             toast({
               title: 'Status',
-              description: "Not Verified",
+              description: "Problem in feedelegation : "+data.message,
               status: 'error',
               duration: 3000,
               isClosable: true,
             })
+            setDeployedContract('');
           }
-          setVerifiedBackend(data.message);
         }).catch(err => {
           toast({
             title: 'Status',
-            description: "Not Verified",
+            description: "Problem in feedelegation : "+err.message,
             status: 'error',
             duration: 3000,
             isClosable: true,
           })
+          setDeployedContract('');
         });
   }
 
@@ -331,54 +320,67 @@ export default function Home() {
               </div>
               { isFeatureActive == true && <div className="KlaytnPage__content" id="feature">
                 <div className="Dropdown KlaytnPage__dropdown">
-                  <div className="Dropdown__title">Sign & Verify Message</div>
+                  <div className="Dropdown__title">Smart Contract Deploy (Gasless Txn)</div>
                 </div>
                 <div className="KlaytnPage__txExample">
-                  <h2 className="KlaytnPage__txExampleTitle">Sign & Verify Message</h2>
+                  <h2 className="KlaytnPage__txExampleTitle">Smart Contract Deploy (Gasless Transaction)</h2>
                   <div>
+                    <div className="CodeBlockExample">
+                      <h3># contract example (Simple storage contract)</h3>
+                      
+                      <div className="CodeBlockExample__code">
+                        {sampleContract}
+                      </div>
+                    </div>
+                    <div className="CodeBlockExample">
+                      <h3># abi example (Simple storage contract)</h3>
+                      <div className="CodeBlockExample__code">{JSON.stringify(abi, null, 4)}</div>
+                    </div>
+
+                    <div className="CodeBlockExample">
+                      <h3># bytecode example (Simple storage contract)</h3>
+                      <div className="CodeBlockExample__code">{byteCode}</div>
+                    </div>
+
+                    <div className="CodeBlockExample">
+                      <h3># input data (Simple storage contract)</h3>
+                      <div className="CodeBlockExample__code">
+                        key : {keyString} <br/>
+                        value: {valueString}
+                      </div>
+                    </div>
+
                     <h3>Signer</h3>
                     <div className="Input">
                       <input id="from" type="text" name="from" disabled placeholder="Signer" className="Input__input" autoComplete="off" value={address} />
                     </div>
-                    <div className="Input">
-                      <input id="message" onChange={(evt) => setMessage(evt.target.value)} type="text" name="from" placeholder="message" className="Input__input" autoComplete="off" value={message}/>
-                    </div>
-                    <button className="Button" onClick={signMessage}>
-                      <span>Sign Message</span>
+                    <button className="Button" onClick={signDeployer}>
+                      <span>Sign Transaction</span>
                     </button>
-                    { signedMessage &&
+                    { deployerOutput &&
                       <div className="CodeBlockExample">
                         <h3>signature</h3>
-                        <div className="CodeBlockExample__code">{signedMessage}</div>
+                        <div className="CodeBlockExample__code">{deployerOutput}</div>
                       </div>
                     }
-                    <div className="Section">
-                      <h3>Verify Message from Frontend</h3>
-                      <button className="Button" onClick={verifyMessageFromUi}>
-                        <span>Verify from Frontend</span>
-                      </button>
-                      { verifiedUi && <div className="TxResult">
-                        <h3>Verified Status</h3>
-                        <div className="Input">
-                          <input disabled type="text" placeholder="" className="Input__input" autoComplete="off" value={verifiedUi}/>
+                    { deployerOutput &&
+                      <div className="Section">
+                        <h3>Deploy Contract as Fee Payer</h3>
+                        <button className="Button" onClick={signFeePayer}>
+                          <span>Deploy</span>
+                        </button>
+                        { deployedContract && <div className="TxResult">
+                          <h3 style={{cursor: 'pointer'}} onClick={() =>{
+                            window.open('https://baobab.scope.klaytn.com/account/'+deployedContract,
+                            '_blank');
+                          }}>Deployed Contract Address <LinkIcon /></h3>
+                          <div className="Input">
+                            <input disabled type="text" placeholder="" className="Input__input" autoComplete="off" value={deployedContract}/>
+                          </div>
                         </div>
+                        }
                       </div>
-                      }
-                    </div>
-                    
-                    <div className="Section">
-                      <h3>Verify Message from Backend</h3>
-                      <button className="Button" onClick={verifyMessageFromBackend}>
-                        <span>Verify from Backend</span>
-                      </button>
-                      { verifiedBackend && <div className="TxResult">
-                        <h3>Verification Status</h3>
-                        <div className="Input">
-                          <input disabled type="text" placeholder="" className="Input__input" autoComplete="off" value={verifiedBackend}/>
-                        </div>
-                      </div>
-                      }
-                    </div>
+                    }
                   </div>
                 </div>
               </div> }
