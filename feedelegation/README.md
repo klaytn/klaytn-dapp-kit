@@ -21,7 +21,9 @@ Steps to run the application
     - `cp .env.example .env` and update privatekey/publickey details of any account from metamask or kaikas wallet for fee payer containing test klay coins
     - `yarn start`
     - Open application in browser `http://localhost:3000`
-2. Fee Delegates a contract deployment with a deployer from wallet connected to Baobab from UI and fee payer from Backend
+3. Connect to Baobab testnet 
+4. Sign the transaction from deployer address and delegate the fee to admin(fee payer) 
+5. On Deploy, Admin who is the fee payer will deploy the contract by paying for the transaction.
 3. Fee Delegation
 	a) Deployer Signature from UI
 	b) Fee Payer Signature and Transaction submission from Backend
