@@ -4,7 +4,7 @@ var logger = require('morgan');
 var cors = require('cors');
 var dotenv = require('dotenv');
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 var feedelegationRouter = require('./routes/feedelegation');
 

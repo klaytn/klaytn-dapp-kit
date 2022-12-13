@@ -5,10 +5,10 @@ Steps to run the application
 
 1. **Setup Application**
     - `yarn install`
-    - Modify .env details in feedelegation-be
+    - Rename .env.example and update privatekey/publickey details of any account from metamask or kaikas wallet for fee payer
     - `yarn start`
     - Open application in browser `http://localhost:3000`
-2. Fee Delegates a contract deployment with wallet connected to Baobab from UI
+2. Fee Delegates a contract deployment with a deployer from wallet connected to Baobab from UI and fee payer from Backend
 3. Fee Delegation
 	a) Deployer Signature from UI
 	b) Fee Payer Signature and Transaction submission from Backend
