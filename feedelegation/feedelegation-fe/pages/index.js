@@ -75,7 +75,7 @@ export default function Home() {
       _address = provider.selectedAddress;
       _balance = await web3.eth.getBalance(_address);
       if(_balance) {
-        _balance = web3.utils.fromWei(_balance, "ether");
+        _balance = web3.utils.fromWei(_balance, "ether").replace(/(\.\d\d\d).*/,"$1");
       }
       _providerLabel = "( Metamask )";
     } else if(provider.caver){
@@ -84,7 +84,7 @@ export default function Home() {
       _address = accounts[0];
       _balance = await web3.klay.getBalance(_address);
       if(_balance) {
-        _balance = web3.utils.convertFromPeb(_balance, 'KLAY');
+        _balance = web3.utils.convertFromPeb(_balance, 'KLAY').replace(/(\.\d\d\d).*/,"$1");
       }
       _providerLabel = "( Kaikas )";
     }
@@ -129,15 +129,15 @@ export default function Home() {
       provider.on('accountsChanged', async (_accounts) => {
         setAddress(_accounts[0].toLowerCase());
         if(web3Instance.eth) {
-          let _balance = await weweb3Instanceb3.eth.getBalance(_accounts[0]);
+          let _balance = await web3Instance.eth.getBalance(_accounts[0]);
           if(_balance) {
-            _balance = web3Instance.utils.fromWei(_balance, "ether");
+            _balance = web3Instance.utils.fromWei(_balance, "ether").replace(/(\.\d\d\d).*/,"$1");
             setBalance(_balance.toString());
           }
         } else if(web3Instance.klay){
           let _balance = await web3Instance.klay.getBalance(_accounts[0]);
           if(_balance) {
-            _balance = web3Instance.utils.convertFromPeb(_balance, 'KLAY');
+            _balance = web3Instance.utils.convertFromPeb(_balance, 'KLAY').replace(/(\.\d\d\d).*/,"$1");
             setBalance(_balance.toString());
           }
         }
