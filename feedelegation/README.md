@@ -24,6 +24,5 @@ Steps to run the application
 3. Connect to Baobab testnet 
 4. Sign the transaction from deployer address and delegate the fee to admin(fee payer) 
 5. On Deploy, Admin who is the fee payer will deploy the contract by paying for the transaction.
-3. Fee Delegation
 	a) Deployer Signature from UI
 	b) Fee Payer Signature and Transaction submission from Backend
