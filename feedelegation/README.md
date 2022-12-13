@@ -1,5 +1,5 @@
-# FeeDelegation using web3modal for Baobab network
-In order to Improve the usability of our blockchain, Klaytn has implemented on-chain fee delegation. It means that the service providers will be paying for the transaction fees on behalf of the users.
+# FeeDelegation on Baobab network
+In order to Improve the usability of the blockchain, Klaytn has implemented on-chain fee delegation. It means that the service providers will be paying for the transaction fees on behalf of the users.
 
 Klaytn-Dapp-Kit has the boiler plate code to implement fee delegation. More details on the Fee Delegation mechanism can be found here : https://medium.com/klaytn/klaytn-usability-improvement-series-3-fee-delegation-69b286c11968
 ![0_FsymS6h3grVDxHBv](https://user-images.githubusercontent.com/100742846/207226672-5cad2bcd-8d20-4480-a0c4-e2054ff41959.png)
